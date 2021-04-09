@@ -1,0 +1,69 @@
+version: '3.4'
+
+x-default:
+  &default-odoo
+  tty: true
+  build: .
+  volumes:
+    - odoo-web-data:/var/lib/odoo
+    - ./vendor/odoo/odoo:/usr/lib/python3/dist-packages/odoo
+    - ./vendor/odoo/addons:/var/lib/odoo/addons/13.0
+    - ./config:/etc/odoo
+    - ./vendor/OCA/partner-contact:/mnt/addons/partner-contact
+
+  environment:
+    - WDB_SOCKET_SERVER=wdb
+    - WDB_NO_BROWSER_AUTO_OPEN=True
+
+services:
+  odoo:
+    << : *default-odoo
+    depends_on:
+      - db
+      - wdb
+      - proxy
+      - odoo-longpolling
+      - smtpfake
+    command: [
+    '--dev', 'wdb,reload,qweb,werkzeug,xml',
+    '-d', 'example_database',
+    '-i', 'partner_contact_birthdate',
+    #'--test-enable',
+    #'--stop-after-init',
+    #'--log-handler=odoo.addons.partner_contact_birthdate:DEBUG',
+    ]
+
+  odoo-longpolling:
+    << : *default-odoo
+    depends_on:
+      - db
+      - wdb
+      - proxy
+    command: ['odoo', 'gevent', '--dev', 'wdb,reload,qweb,werkzeug,xml']
+
+  db:
+    image: postgres:10
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=odoo
+      - POSTGRES_USER=odoo
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - odoo-db-data:/var/lib/postgresql/data/pgdata
+    ports:
+      - "5433:5432"
+
+  proxy:
+    image: envoyproxy/envoy-alpine:v1.10.0
+    ports: ['80:80']
+    volumes: ['./envoy.yaml:/etc/envoy/envoy.yaml']
+
+  wdb:
+    image: kozea/wdb:3.3.0
+
+  smtpfake:
+    image: mailhog/mailhog
+
+volumes:
+  odoo-web-data:
+  odoo-db-data:
