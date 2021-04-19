@@ -7,9 +7,8 @@ x-default:
   volumes:
     - odoo-web-data:/var/lib/odoo
     - ./vendor/odoo/odoo:/usr/lib/python3/dist-packages/odoo
-    - ./vendor/odoo/addons:/var/lib/odoo/addons/13.0
+    - ./vendor/odoo/addons:/mnt/addons/odoo
     - ./config:/etc/odoo
-    - ./vendor/OCA/partner-contact:/mnt/addons/partner-contact
 
   environment:
     - WDB_SOCKET_SERVER=wdb
@@ -27,7 +26,7 @@ services:
     command: [
     '--dev', 'wdb,reload,qweb,werkzeug,xml',
     '-d', 'example_database',
-    '-i', 'partner_contact_birthdate',
+    '-i', 'mail',
     #'--test-enable',
     #'--stop-after-init',
     #'--log-handler=odoo.addons.partner_contact_birthdate:DEBUG',
